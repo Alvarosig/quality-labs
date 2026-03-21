@@ -1,0 +1,24 @@
+{
+  "name": "quality-labs",
+  "version": "1.0.0",
+  "description": "QA portfolio — E2E, API, performance, and BDD testing against the Conduit RealWorld app",
+  "scripts": {
+    "test:e2e": "npx playwright test --project=e2e",
+    "test:api": "npx playwright test --project=api",
+    "test": "npx playwright test",
+    "report": "npx playwright show-report"
+  },
+  "keywords": [
+    "qa",
+    "testing",
+    "playwright",
+    "e2e",
+    "api-testing"
+  ],
+  "author": "Alvaro",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0"
+  }
+}
