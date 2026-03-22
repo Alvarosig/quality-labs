@@ -24,7 +24,9 @@ test.describe('API Health Check', () => {
     expect(body.articles.length).toBeLessThanOrEqual(5);
   });
 
-  test('GET /api/articles/:slug returns single article', async ({ request }) => {
+  test('GET /api/articles/:slug returns single article', async ({
+    request,
+  }) => {
     // First get an article slug from the list
     const listResponse = await request.get('/api/articles', {
       params: { limit: 1 },

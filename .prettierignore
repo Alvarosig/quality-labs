@@ -1,0 +1,7 @@
+package-lock.json
+node_modules
+.env
+.env.example
+playwright-report
+reports
+test-results

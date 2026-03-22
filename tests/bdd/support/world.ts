@@ -1,4 +1,7 @@
-import { setWorldConstructor, World as CucumberWorld } from '@cucumber/cucumber';
+import {
+  setWorldConstructor,
+  World as CucumberWorld,
+} from '@cucumber/cucumber';
 import { Browser, Page, BrowserContext, APIRequestContext } from 'playwright';
 import { chromium } from 'playwright';
 import { API_URL, BASE_URL } from '../../config';

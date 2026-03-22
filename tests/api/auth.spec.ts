@@ -20,7 +20,9 @@ test.describe('Authentication API', () => {
     expect(body.user.username).toBe(testUser.username);
   });
 
-  test('POST /api/users/login authenticates existing user', async ({ request }) => {
+  test('POST /api/users/login authenticates existing user', async ({
+    request,
+  }) => {
     await request.post('/api/users', {
       data: { user: testUser },
     });
@@ -40,7 +42,9 @@ test.describe('Authentication API', () => {
     expect(body.user.email).toBe(testUser.email);
   });
 
-  test('POST /api/users/login rejects invalid credentials', async ({ request }) => {
+  test('POST /api/users/login rejects invalid credentials', async ({
+    request,
+  }) => {
     const response = await request.post('/api/users/login', {
       data: {
         user: {
@@ -54,7 +58,9 @@ test.describe('Authentication API', () => {
     expect(response.status()).toBe(403);
   });
 
-  test('GET /api/user returns current user with valid token', async ({ request }) => {
+  test('GET /api/user returns current user with valid token', async ({
+    request,
+  }) => {
     // Register a unique user for this test
     const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const freshUser = {

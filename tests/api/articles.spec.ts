@@ -4,7 +4,9 @@ test.describe('Articles CRUD API', () => {
   let token: string;
   const timestamp = Date.now();
 
-  async function registerAndGetToken(request: APIRequestContext): Promise<string> {
+  async function registerAndGetToken(
+    request: APIRequestContext
+  ): Promise<string> {
     const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const response = await request.post('/api/users', {
       data: {
@@ -46,13 +48,15 @@ test.describe('Articles CRUD API', () => {
     expect(body.article.title).toBe(articleData.article.title);
     expect(body.article.description).toBe(articleData.article.description);
     expect(body.article.tagList.map((t: string) => t.toLowerCase())).toEqual(
-      expect.arrayContaining(['test']),
+      expect.arrayContaining(['test'])
     );
     expect(body.article).toHaveProperty('slug');
     expect(body.article.author).toHaveProperty('username');
   });
 
-  test('full CRUD lifecycle: create, read, update, delete', async ({ request }) => {
+  test('full CRUD lifecycle: create, read, update, delete', async ({
+    request,
+  }) => {
     token = await registerAndGetToken(request);
 
     // CREATE
@@ -126,7 +130,9 @@ test.describe('Articles CRUD API', () => {
     expect(body.articles).toBeInstanceOf(Array);
   });
 
-  test('GET /api/articles supports filtering by author', async ({ request }) => {
+  test('GET /api/articles supports filtering by author', async ({
+    request,
+  }) => {
     const response = await request.get('/api/articles', {
       params: { author: 'Artem Bondar', limit: 5 },
     });
