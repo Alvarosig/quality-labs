@@ -1,7 +1,5 @@
 import { defineConfig } from '@playwright/test';
-
-const BASE_URL = process.env.BASE_URL || 'https://conduit.bondaracademy.com';
-const API_URL = process.env.API_URL || 'https://conduit-api.bondaracademy.com';
+import { BASE_URL, API_URL } from './tests/config';
 
 export default defineConfig({
   testDir: './tests',
