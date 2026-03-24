@@ -4,6 +4,7 @@ import { BASE_URL, API_URL } from './tests/config';
 export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
+  expect: { timeout: 10_000 },
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
