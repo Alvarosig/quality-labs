@@ -77,6 +77,7 @@ quality-labs/
 ├── tests/
 │   ├── config.ts                    # Shared URLs (single source of truth)
 │   ├── api/                         # API tests (no browser, fast ~8s)
+│   │   ├── helpers.ts               # Shared helpers: createUser, createArticle, authHeaders
 │   │   ├── health.spec.ts           # Smoke checks (tags, articles list)
 │   │   ├── auth.spec.ts             # Registration, login, token validation
 │   │   ├── articles.spec.ts         # Full CRUD lifecycle + filters
@@ -152,6 +153,19 @@ Parallel tests require isolation.
 Shared data causes flaky behavior.
 Each test generates its own user → no shared state → deterministic execution.
 
+### Why plain helpers instead of Playwright fixtures?
+
+Playwright offers a [custom fixtures](https://playwright.dev/docs/test-fixtures) API that can inject pre-built state directly into the `test` function signature. It is a powerful pattern — but it adds indirection that isn't justified here.
+
+Plain helper functions were chosen because:
+
+- **Transparency** — `const { token } = await createUser(request)` is explicit. Fixtures hide setup behind the `test` signature, which makes it harder to trace what state a test depends on.
+- **Simplicity** — helpers are just functions. No fixture declaration, no `extend`, no merging configs. Less framework knowledge required to read and maintain them.
+- **Flexibility** — some tests need one user, others need two or three. Fixtures work best when every test needs the same setup; helpers compose freely per test.
+- **Right scope** — fixtures shine when setup is shared across files or requires browser-level lifecycle hooks. Here, setup is lightweight (HTTP calls) and per-test. A helper file is the right level of abstraction.
+
+If the suite grows to the point where many tests across different files need identical pre-built state (e.g. an authenticated session with articles already created), migrating to fixtures would make sense then.
+
 ### Why seed data via API in E2E tests?
 
 We already test the UI separately.
@@ -180,6 +194,7 @@ For this project:
 
 | Pattern                 | Where                   | What it shows                                     |
 | ----------------------- | ----------------------- | ------------------------------------------------- |
+| Shared test helpers     | `api/helpers.ts`        | Reusable setup functions without fixture overhead |
 | Data isolation          | Every test file         | Unique users/data per test, zero shared state     |
 | API seeding for E2E     | `e2e/articles.spec.ts`  | Create data via API, test interactions via UI     |
 | localStorage auth       | `e2e/articles.spec.ts`  | Skip login UI by setting JWT directly             |

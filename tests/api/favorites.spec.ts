@@ -1,41 +1,7 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { authHeaders, createUser, createArticle } from './helpers';
 
 test.describe('Favorites API', () => {
-  async function createUser(request: APIRequestContext) {
-    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const res = await request.post('/api/users', {
-      data: {
-        user: {
-          email: `fav-${uid}@quality-labs.com`,
-          password: 'SecurePass123!',
-          username: `qa-fav-${uid}`.slice(0, 20),
-        },
-      },
-    });
-    const { user } = await res.json();
-    return { token: user.token, username: user.username };
-  }
-
-  async function createArticle(request: APIRequestContext, token: string) {
-    const uid = Date.now();
-    const res = await request.post('/api/articles', {
-      headers: { Authorization: `Token ${token}` },
-      data: {
-        article: {
-          title: `Fav Test ${uid}`,
-          description: 'Article for favorite tests',
-          body: 'Content.',
-        },
-      },
-    });
-    const { article } = await res.json();
-    return article.slug;
-  }
-
-  function authHeaders(token: string) {
-    return { Authorization: `Token ${token}` };
-  }
-
   test('POST /api/articles/:slug/favorite marks article as favorited', async ({
     request,
   }) => {

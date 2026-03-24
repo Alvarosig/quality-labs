@@ -1,33 +1,12 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { authHeaders, createUser } from './helpers';
 
 test.describe('Articles CRUD API', () => {
   let token: string;
   const timestamp = Date.now();
 
-  async function registerAndGetToken(
-    request: APIRequestContext
-  ): Promise<string> {
-    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const response = await request.post('/api/users', {
-      data: {
-        user: {
-          email: `articles-${uid}@quality-labs.com`,
-          password: 'SecurePass123!',
-          username: `qa-art-${uid}`.slice(0, 20),
-        },
-      },
-    });
-    expect(response.status()).toBe(201);
-    const body = await response.json();
-    return body.user.token;
-  }
-
-  function authHeaders(token: string) {
-    return { Authorization: `Token ${token}` };
-  }
-
   test('POST /api/articles creates a new article', async ({ request }) => {
-    token = await registerAndGetToken(request);
+    ({ token } = await createUser(request, 'art'));
 
     const articleData = {
       article: {
@@ -57,7 +36,7 @@ test.describe('Articles CRUD API', () => {
   test('full CRUD lifecycle: create, read, update, delete', async ({
     request,
   }) => {
-    token = await registerAndGetToken(request);
+    ({ token } = await createUser(request, 'art'));
 
     // CREATE
     const createResponse = await request.post('/api/articles', {

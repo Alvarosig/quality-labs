@@ -1,37 +1,11 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
+import { authHeaders, createUser, createArticle } from './helpers';
 
 test.describe('Comments API', () => {
   async function createUserAndArticle(request: APIRequestContext) {
-    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    const userRes = await request.post('/api/users', {
-      data: {
-        user: {
-          email: `comments-${uid}@quality-labs.com`,
-          password: 'SecurePass123!',
-          username: `qa-cmt-${uid}`.slice(0, 20),
-        },
-      },
-    });
-    const { user } = await userRes.json();
-
-    const articleRes = await request.post('/api/articles', {
-      headers: { Authorization: `Token ${user.token}` },
-      data: {
-        article: {
-          title: `Comment Test ${uid}`,
-          description: 'Article for comment tests',
-          body: 'Body content.',
-        },
-      },
-    });
-    const { article } = await articleRes.json();
-
-    return { token: user.token, slug: article.slug, username: user.username };
-  }
-
-  function authHeaders(token: string) {
-    return { Authorization: `Token ${token}` };
+    const { token, username } = await createUser(request, 'cmt');
+    const slug = await createArticle(request, token);
+    return { token, slug, username };
   }
 
   test('POST /api/articles/:slug/comments creates a comment', async ({
