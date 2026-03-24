@@ -72,7 +72,7 @@ test.describe('Comments API', () => {
 
     const deleteRes = await request.delete(
       `/api/articles/${slug}/comments/${comment.id}`,
-      { headers: authHeaders(token) },
+      { headers: authHeaders(token) }
     );
     expect(deleteRes.ok()).toBeTruthy();
 
@@ -94,7 +94,7 @@ test.describe('Comments API', () => {
     expect(response.status()).toBe(401);
   });
 
-  test('cannot delete another user\'s comment', async ({ request }) => {
+  test("cannot delete another user's comment", async ({ request }) => {
     const { token: authorToken, slug } = await createUserAndArticle(request);
 
     // Author creates a comment
@@ -120,7 +120,7 @@ test.describe('Comments API', () => {
     // Other user tries to delete author's comment
     const deleteRes = await request.delete(
       `/api/articles/${slug}/comments/${comment.id}`,
-      { headers: authHeaders(otherUser.token) },
+      { headers: authHeaders(otherUser.token) }
     );
 
     expect(deleteRes.ok()).toBeFalsy();

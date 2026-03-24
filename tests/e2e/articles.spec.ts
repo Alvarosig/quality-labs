@@ -46,7 +46,7 @@ test.describe('Article CRUD via UI', () => {
       articleData.title,
       articleData.description,
       articleData.body,
-      articleData.tags,
+      articleData.tags
     );
     const slug = await editor.publish();
 
@@ -85,7 +85,9 @@ test.describe('Article CRUD via UI', () => {
     await editor.publishButton.click();
     await page.waitForURL(/\/article\//);
 
-    await expect(articlePage.body).toContainText('Updated content via E2E test');
+    await expect(articlePage.body).toContainText(
+      'Updated content via E2E test'
+    );
   });
 
   test('should delete an article', async ({ page, request }) => {
@@ -109,7 +111,9 @@ test.describe('Article CRUD via UI', () => {
 
     await expect(page).toHaveURL('/');
 
-    const verifyRes = await request.get(`${API_URL}/api/articles/${article.slug}`);
+    const verifyRes = await request.get(
+      `${API_URL}/api/articles/${article.slug}`
+    );
     expect(verifyRes.status()).toBe(404);
   });
 });

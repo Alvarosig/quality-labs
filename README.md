@@ -62,13 +62,15 @@ This project validates both **business logic and system behavior across layers**
 - **Article lifecycle** — create, update, delete, filtering and ownership rules
 - **Comments system** — CRUD operations and cross-user permissions
 - **Favorites system** — state persistence and user-specific views
+- **Follow/Unfollow system** — relationship state and user-specific perspective
+- **User profile update** — field persistence and round-trip validation
 
 | Layer     | Tests                 |
 | --------- | --------------------- |
-| **API**   | 24                    |
+| **API**   | 36                    |
 | **E2E**   | 6                     |
 | **BDD**   | 3 scenarios           |
-| **Total** | 30 Playwright + 3 BDD |
+| **Total** | 42 Playwright + 3 BDD |
 
 ---
 
@@ -84,7 +86,9 @@ quality-labs/
 │   │   ├── auth.spec.ts             # Registration, login, token validation
 │   │   ├── articles.spec.ts         # Full CRUD lifecycle + filters
 │   │   ├── comments.spec.ts         # Comments CRUD + cross-user permissions
-│   │   └── favorites.spec.ts        # Favorite/unfavorite + state verification
+│   │   ├── favorites.spec.ts        # Favorite/unfavorite + state verification
+│   │   ├── follow.spec.ts           # Follow/unfollow + perspective-aware state
+│   │   └── profile.spec.ts          # PUT /api/user field updates + persistence
 │   ├── e2e/                         # E2E browser tests (~19s)
 │   │   ├── auth.spec.ts             # Sign up, sign in, error states
 │   │   ├── articles.spec.ts         # Create, edit, delete articles via UI
@@ -191,6 +195,7 @@ The Conduit API (`conduit-api.bondaracademy.com`) is a shared public instance wi
 The solution is to run a self-contained Conduit API container in CI, built from the [gothinkster/golang-gin-realworld-example-app](https://github.com/gothinkster/golang-gin-realworld-example-app) backend — a Go/Gin implementation that uses SQLite with no external database dependency.
 
 The Docker image is:
+
 - Built once manually and pushed to `ghcr.io/alvarosig/conduit-api:latest`
 - Pulled by CI on every run using the built-in `GITHUB_TOKEN` — no secrets to manage
 - A multi-stage Alpine build: ~30-50MB compressed, pulls in seconds on GitHub's infrastructure
@@ -220,20 +225,20 @@ For this project:
 
 ## Key patterns demonstrated
 
-| Pattern                 | Where                   | What it shows                                     |
-| ----------------------- | ----------------------- | ------------------------------------------------- |
-| Shared test helpers     | `api/helpers.ts`        | Reusable setup functions without fixture overhead |
-| Data isolation          | Every test file         | Unique users/data per test, zero shared state     |
-| API seeding for E2E     | `e2e/articles.spec.ts`  | Create data via API, test interactions via UI     |
-| localStorage auth       | `e2e/articles.spec.ts`  | Skip login UI by setting JWT directly             |
-| Parent-child resources  | `api/comments.spec.ts`  | Setting up articles before testing comments       |
-| State toggle testing    | `api/favorites.spec.ts` | Favorite/unfavorite and verify count changes      |
-| Cross-user permissions  | `api/comments.spec.ts`  | User A creates, User B can't delete               |
-| Perspective-aware state | `api/favorites.spec.ts` | Same article shows different `favorited` per user |
-| Cross-layer assertions  | `e2e/articles.spec.ts`  | Delete via UI, verify gone via API                |
-| Page Object Model       | `e2e/pages/`            | Centralized locators, one file per page           |
-| Dockerized API for CI   | `docker/`, `ci.yml`     | Self-contained test environment, no external deps |
-| Env-based API URL       | `tests/config.ts`       | Same tests run locally (hosted) and in CI (Docker)|
+| Pattern                 | Where                   | What it shows                                      |
+| ----------------------- | ----------------------- | -------------------------------------------------- |
+| Shared test helpers     | `api/helpers.ts`        | Reusable setup functions without fixture overhead  |
+| Data isolation          | Every test file         | Unique users/data per test, zero shared state      |
+| API seeding for E2E     | `e2e/articles.spec.ts`  | Create data via API, test interactions via UI      |
+| localStorage auth       | `e2e/articles.spec.ts`  | Skip login UI by setting JWT directly              |
+| Parent-child resources  | `api/comments.spec.ts`  | Setting up articles before testing comments        |
+| State toggle testing    | `api/favorites.spec.ts` | Favorite/unfavorite and verify count changes       |
+| Cross-user permissions  | `api/comments.spec.ts`  | User A creates, User B can't delete                |
+| Perspective-aware state | `api/favorites.spec.ts` | Same article shows different `favorited` per user  |
+| Cross-layer assertions  | `e2e/articles.spec.ts`  | Delete via UI, verify gone via API                 |
+| Page Object Model       | `e2e/pages/`            | Centralized locators, one file per page            |
+| Dockerized API for CI   | `docker/`, `ci.yml`     | Self-contained test environment, no external deps  |
+| Env-based API URL       | `tests/config.ts`       | Same tests run locally (hosted) and in CI (Docker) |
 
 ## What I learned building this
 
@@ -248,8 +253,8 @@ For this project:
 - [ ] **Performance testing with k6** — run Conduit backend locally via Docker, then write smoke/load/stress tests
 - [ ] **More E2E flows** — navigation, user profile, tags filtering
 - [x] **CI/CD with GitHub Actions** — run the full suite on every push
-- [ ] **Follow/unfollow API tests** — user profile relationship testing
-- [ ] **User profile update API tests** — PUT /api/user
+- [x] **Follow/unfollow API tests** — user profile relationship testing
+- [x] **User profile update API tests** — PUT /api/user
 - [ ] **QA Playground challenges** — bonus section for tricky UI automation (shadow DOM, iframes, drag-and-drop)
 
 ## Final note

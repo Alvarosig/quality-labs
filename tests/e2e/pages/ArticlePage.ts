@@ -13,7 +13,9 @@ export class ArticlePage {
     this.title = page.locator('h1');
     this.body = page.locator('.article-content');
     this.editButton = page.getByRole('link', { name: 'Edit Article' }).first();
-    this.deleteButton = page.getByRole('button', { name: 'Delete Article' }).first();
+    this.deleteButton = page
+      .getByRole('button', { name: 'Delete Article' })
+      .first();
     this.tagList = page.locator('.tag-list');
   }
 

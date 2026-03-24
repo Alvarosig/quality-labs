@@ -21,7 +21,12 @@ export class ArticleEditorPage {
     await this.page.goto('/editor');
   }
 
-  async fillArticle(title: string, description: string, body: string, tags?: string[]) {
+  async fillArticle(
+    title: string,
+    description: string,
+    body: string,
+    tags?: string[]
+  ) {
     await this.titleInput.fill(title);
     await this.descriptionInput.fill(description);
     await this.bodyInput.fill(body);
