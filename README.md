@@ -101,6 +101,11 @@ quality-labs/
 │       └── support/
 │           ├── world.ts             # Shared context (browser, page, API)
 │           └── hooks.ts             # Before/After scenario hooks
+├── docker/
+│   └── conduit-api.Dockerfile       # Multi-stage Alpine build for CI (Go/Gin + SQLite)
+├── .github/
+│   └── workflows/
+│       └── ci.yml                   # Parallel api + e2e jobs, browser cache, Docker pull
 ├── playwright.config.ts             # Two projects: api + e2e
 ├── cucumber.js                      # Cucumber config
 ├── tsconfig.json
@@ -179,6 +184,27 @@ For E2E:
 
 This reduces test time and increases stability.
 
+### Why run the API in Docker for CI and not locally?
+
+The Conduit API (`conduit-api.bondaracademy.com`) is a shared public instance with no SLA. Running tests against it in CI introduces two risks: rate limiting from GitHub Actions shared IP ranges, and false negatives when the server is simply down.
+
+The solution is to run a self-contained Conduit API container in CI, built from the [gothinkster/golang-gin-realworld-example-app](https://github.com/gothinkster/golang-gin-realworld-example-app) backend — a Go/Gin implementation that uses SQLite with no external database dependency.
+
+The Docker image is:
+- Built once manually and pushed to `ghcr.io/alvarosig/conduit-api:latest`
+- Pulled by CI on every run using the built-in `GITHUB_TOKEN` — no secrets to manage
+- A multi-stage Alpine build: ~30-50MB compressed, pulls in seconds on GitHub's infrastructure
+
+Locally, tests keep hitting the hosted API as a fallback. `tests/config.ts` reads `API_URL` from the environment — CI sets it to `http://localhost:8080`, local runs don't set it so the hosted URL is used automatically.
+
+E2E tests intentionally keep hitting the hosted frontend (`conduit.bondaracademy.com`) — pairing a different frontend implementation locally would risk locator mismatches and require rewriting all Page Objects for no real gain.
+
+### Why Alpine for the API image and not a Node-based image?
+
+The Go/Gin backend compiles to a single binary with no runtime dependencies beyond SQLite. Alpine (~5MB base) is the right fit: the final image is tiny and fast to pull.
+
+Playwright and Chromium require Debian-based system libraries (`libnss`, `libglib`, `libatk`, etc.) that Alpine doesn't ship. The E2E and API test jobs use `ubuntu-latest` + `actions/setup-node` — the standard and officially recommended environment for Playwright.
+
 ### Why BDD is just a proof of concept?
 
 BDD adds a second abstraction layer.
@@ -206,6 +232,8 @@ For this project:
 | Perspective-aware state | `api/favorites.spec.ts` | Same article shows different `favorited` per user |
 | Cross-layer assertions  | `e2e/articles.spec.ts`  | Delete via UI, verify gone via API                |
 | Page Object Model       | `e2e/pages/`            | Centralized locators, one file per page           |
+| Dockerized API for CI   | `docker/`, `ci.yml`     | Self-contained test environment, no external deps |
+| Env-based API URL       | `tests/config.ts`       | Same tests run locally (hosted) and in CI (Docker)|
 
 ## What I learned building this
 

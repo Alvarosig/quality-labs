@@ -55,7 +55,7 @@ test.describe('Authentication API', () => {
     });
 
     expect(response.ok()).toBeFalsy();
-    expect(response.status()).toBe(403);
+    expect([401, 403]).toContain(response.status());
   });
 
   test('GET /api/user returns current user with valid token', async ({
