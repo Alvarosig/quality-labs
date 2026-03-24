@@ -1,5 +1,7 @@
 # Quality Labs
 
+[![CI](https://github.com/Alvarosig/quality-labs/actions/workflows/ci.yml/badge.svg)](https://github.com/Alvarosig/quality-labs/actions/workflows/ci.yml)
+
 Engineering-focused test automation project demonstrating **API testing**, **E2E testing**, and **BDD strategies** applied to a real-world application.
 
 This project goes beyond writing tests — it focuses on building **reliable, scalable and maintainable test systems**, using patterns commonly found in production environments.
@@ -48,7 +50,7 @@ Unlike basic automation projects, this focuses on:
 - **Playwright** — E2E browser tests + API tests
 - **Cucumber.js** — BDD with Gherkin (proof of concept)
 - **TypeScript** — Strong typing and maintainability
-- **GitHub Actions** — CI/CD (planned)
+- **GitHub Actions** — CI/CD (api + e2e jobs on every push/PR)
 
 ---
 
@@ -217,7 +219,7 @@ For this project:
 
 - [ ] **Performance testing with k6** — run Conduit backend locally via Docker, then write smoke/load/stress tests
 - [ ] **More E2E flows** — navigation, user profile, tags filtering
-- [ ] **CI/CD with GitHub Actions** — run the full suite on every push
+- [x] **CI/CD with GitHub Actions** — run the full suite on every push
 - [ ] **Follow/unfollow API tests** — user profile relationship testing
 - [ ] **User profile update API tests** — PUT /api/user
 - [ ] **QA Playground challenges** — bonus section for tricky UI automation (shadow DOM, iframes, drag-and-drop)
