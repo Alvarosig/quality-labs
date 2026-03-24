@@ -1,10 +1,38 @@
 # Quality Labs
 
-A QA portfolio project showcasing **API testing**, **E2E testing**, and **BDD** against the [Conduit (RealWorld)](https://github.com/gothinkster/realworld) application — a Medium.com clone with full CRUD, authentication, comments, favorites, and user profiles.
+Engineering-focused test automation project demonstrating **API testing**, **E2E testing**, and **BDD strategies** applied to a real-world application.
+
+This project goes beyond writing tests — it focuses on building **reliable, scalable and maintainable test systems**, using patterns commonly found in production environments.
+
+---
 
 ## Why this project exists
 
-I'm building this to practice and demonstrate real-world test automation skills. The goal is not just writing tests, but understanding **why** they're structured the way they are — data isolation, Page Object Model, API seeding for E2E, cross-layer assertions, and resource relationship testing.
+Modern test automation is not just about validating features — it's about ensuring **reliability, speed and confidence in delivery**.
+
+This project explores real-world QA engineering practices such as:
+
+- deterministic test execution through **data isolation**
+- **API-driven setup** for faster and more stable tests
+- separation between API and E2E layers
+- **cross-layer validation strategies**
+- maintainable test architecture using **Page Object Model**
+
+The goal is to simulate how high-quality test suites are structured in real production systems.
+
+---
+
+## What makes this project different
+
+Unlike basic automation projects, this focuses on:
+
+- **Data isolation** — each test runs independently, eliminating flaky behavior
+- **API-first strategy** — most validations happen at the API layer for speed and reliability
+- **Cross-layer validation** — UI actions are validated via API
+- **Test architecture** — structured layers and Page Object Model
+- **Real-world patterns** — practices used in professional QA environments
+
+---
 
 ## Target application
 
@@ -13,21 +41,34 @@ I'm building this to practice and demonstrate real-world test automation skills.
 | **Frontend** | https://conduit.bondaracademy.com         |
 | **API**      | https://conduit-api.bondaracademy.com/api |
 
+---
+
 ## Tech stack
 
-- **Playwright** — E2E browser tests + API tests (single framework, two projects)
+- **Playwright** — E2E browser tests + API tests
 - **Cucumber.js** — BDD with Gherkin (proof of concept)
-- **TypeScript** — All test code
+- **TypeScript** — Strong typing and maintainability
 - **GitHub Actions** — CI/CD (planned)
+
+---
 
 ## Test coverage
 
-| Layer     | Tests                 | What's covered                                                                                                                                                                            |
-| --------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **API**   | 24                    | Auth (register, login, token, 401, duplicates), Articles CRUD + filters, Comments (create, list, delete, cross-user permissions), Favorites (toggle, multi-user count, state persistence) |
-| **E2E**   | 6                     | Sign up, Sign in, error handling, Article create/edit/delete via UI                                                                                                                       |
-| **BDD**   | 3 scenarios           | Authentication flows as Gherkin specs (proof of concept)                                                                                                                                  |
+This project validates both **business logic and system behavior across layers**:
+
+- **Authentication flows** — positive and negative scenarios, token validation
+- **Article lifecycle** — create, update, delete, filtering and ownership rules
+- **Comments system** — CRUD operations and cross-user permissions
+- **Favorites system** — state persistence and user-specific views
+
+| Layer     | Tests                 |
+| --------- | --------------------- |
+| **API**   | 24                    |
+| **E2E**   | 6                     |
+| **BDD**   | 3 scenarios           |
 | **Total** | 30 Playwright + 3 BDD |
+
+---
 
 ## Project structure
 
@@ -88,25 +129,52 @@ npm run report
 
 ## Architecture decisions
 
-### Why two Playwright projects?
+### Why separate API and E2E tests?
 
-API tests don't need a browser — they're pure HTTP calls via Playwright's `request` context. E2E tests launch Chromium. Separating them means `npm run test:api` gives fast feedback (~8s for 24 tests), while `npm run test:e2e` validates the actual UI.
+API tests run without a browser and provide fast feedback (~8s).
+E2E tests validate real user flows in the browser.
+This separation improves speed, clarity and maintainability.
 
 ### Why Page Object Model?
 
-If 10 tests reference `page.getByPlaceholder('Email')` and the placeholder changes, you fix 10 files. With a POM, you fix one. Each page object maps to one real page in the app — `SignUpPage` for `/register`, `SignInPage` for `/login`, etc.
+Without abstraction, UI changes break multiple tests.
+
+With POM:
+
+- locators are centralized
+- maintenance is simplified
+- tests become easier to read and scale
 
 ### Why create a user per test?
 
-Tests run in parallel. If Test A and Test B share a user, one might delete data the other needs — causing flaky failures that aren't real bugs. Each test creates its own unique user with `Date.now()` + random string, uses it, and never touches another test's data.
+Parallel tests require isolation.
+
+Shared data causes flaky behavior.
+Each test generates its own user → no shared state → deterministic execution.
 
 ### Why seed data via API in E2E tests?
 
-The login E2E test creates its user via API (`request.post('/api/users')`), not through the registration UI. Why? Because we already tested registration in a separate test. For the login test, we just need a user to **exist** — the fastest way is the API. This is a standard pattern: **set up via API, test via UI**.
+We already test the UI separately.
+
+For E2E:
+
+- we **set up data via API**
+- we **validate behavior via UI**
+
+This reduces test time and increases stability.
 
 ### Why BDD is just a proof of concept?
 
-In practice, BDD adds a second layer of code (feature files + step definitions) that does the same thing as Playwright specs. It makes sense when product owners actively read and write Gherkin scenarios. For a personal project, the overhead isn't worth it — but having it proves I know how to set it up.
+BDD adds a second abstraction layer.
+
+It’s useful when:
+
+- non-technical stakeholders read scenarios
+
+For this project:
+
+- included as proof of knowledge
+- not used as primary testing strategy
 
 ## Key patterns demonstrated
 
@@ -125,8 +193,8 @@ In practice, BDD adds a second layer of code (feature files + step definitions) 
 ## What I learned building this
 
 - **Data isolation is the foundation** — every other pattern depends on it. Without independent tests, nothing works reliably.
-- **API tests should be the bulk of your suite** — they're 10x faster and catch most bugs. E2E tests are for validating critical user flows, not for testing every edge case.
-- **The "set up via API, test via UI" pattern** saves massive time. I didn't know this was standard practice in companies before this project.
+- **API tests should be the bulk of your suite** (speed + coverage)
+- **E2E tests should validate critical flows, not everything**
 - **BDD looks clean in theory** but adds maintenance overhead when you're the only one reading the feature files.
 - **Flaky tests are almost always a data isolation problem**, not a timing problem.
 
@@ -138,6 +206,10 @@ In practice, BDD adds a second layer of code (feature files + step definitions) 
 - [ ] **Follow/unfollow API tests** — user profile relationship testing
 - [ ] **User profile update API tests** — PUT /api/user
 - [ ] **QA Playground challenges** — bonus section for tricky UI automation (shadow DOM, iframes, drag-and-drop)
+
+## Final note
+
+This project reflects a shift from traditional QA toward Quality Engineering — where the goal is not only to find bugs, but to improve system reliability, test strategy and delivery confidence.
 
 ## Author
 

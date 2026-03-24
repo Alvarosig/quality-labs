@@ -4,6 +4,8 @@
   "description": "QA portfolio — E2E, API, performance, and BDD testing against the Conduit RealWorld app",
   "scripts": {
     "test:e2e": "npx playwright test --project=e2e",
+    "test:e2e:ui": "npx playwright test --project=e2e --ui",
+    "test:e2e:codegen": "npx playwright codegen https://conduit.bondaracademy.com",
     "test:api": "npx playwright test --project=api",
     "test": "npx playwright test",
     "test:bdd": "npx cucumber-js",
