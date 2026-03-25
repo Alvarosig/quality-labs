@@ -4,3 +4,5 @@ playwright-report/
 blob-report/
 reports/
 .env
+output.har
+filtered-har.json

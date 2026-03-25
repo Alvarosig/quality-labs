@@ -116,6 +116,33 @@ quality-labs/
 └── package.json
 ```
 
+## HAR-driven API test generation
+
+This project uses a workflow inspired by [Artem Bondar's article](https://bondaracademy.com/blog/generate-api-tests-with-ai-playwright) to generate API tests from real browser traffic — no need to read API docs manually.
+
+**How it works:**
+
+1. Run the E2E suite with HAR recording enabled — the browser captures every network request made during the tests
+2. Run the converter script — strips noise (assets, headers, cookies) and keeps only the Conduit API calls (~400 lines from ~3000)
+3. Feed the cleaned file to an AI with a short prompt — the HAR contains the real request/response shapes, so the AI generates accurate tests with no hallucination
+
+```bash
+# Step 1 — record HAR during E2E run
+npx playwright test --project=e2e:har
+
+# Step 2 — clean it down to API calls only
+npm run har:convert
+
+# Step 3 — feed filtered-har.json to an AI with this prompt:
+# "Read this HAR and generate Playwright API tests following the
+#  conventions in tests/api/ — one describe block, helpers from
+#  helpers.ts, authHeaders for auth, one test per scenario."
+```
+
+The `output.har` and `filtered-har.json` files are gitignored — they are generated artifacts, not source files.
+
+---
+
 ## How to run
 
 ```bash

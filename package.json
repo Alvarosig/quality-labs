@@ -10,6 +10,8 @@
     "test": "npx playwright test",
     "test:bdd": "npx cucumber-js",
     "report": "npx playwright show-report",
+    "har:record": "npx playwright test --project=e2e tests/e2e/har-example.spec.ts",
+    "har:convert": "node scripts/har-converter.js",
     "format": "prettier --write ."
   },
   "keywords": [
