@@ -82,7 +82,16 @@ test.describe('Article CRUD via UI', () => {
     await articlePage.editButton.click();
 
     await editor.bodyInput.fill('Updated content via E2E test');
-    await editor.publishButton.click();
+
+    await Promise.all([
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/api/articles/') &&
+          resp.request().method() === 'PUT'
+      ),
+      editor.publishButton.click(),
+    ]);
+
     await page.waitForURL(/\/article\//);
 
     await expect(articlePage.body).toContainText(
