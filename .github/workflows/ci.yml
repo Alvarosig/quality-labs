@@ -5,8 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Runs nightly at 6am UTC — full suite (E2E + performance)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Manual trigger — useful for stress tests before a release
 
 jobs:
+  # ─── Runs on every push and PR ────────────────────────────────────────────
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
@@ -68,9 +74,11 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # ─── Runs nightly and on manual trigger only ──────────────────────────────
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
@@ -106,4 +114,47 @@ jobs:
         with:
           name: e2e-report
           path: playwright-report/
+          retention-days: 7
+
+  # ─── Runs nightly and on manual trigger only ──────────────────────────────
+  performance-tests:
+    name: Performance Tests (Smoke)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Start Conduit API
+        run: |
+          docker pull ghcr.io/alvarosig/conduit-api:latest
+          docker run -d --name conduit-api \
+            -p 8080:8080 \
+            -e GIN_MODE=release \
+            -e DB_PATH=/tmp/conduit.db \
+            ghcr.io/alvarosig/conduit-api:latest
+          for i in {1..30}; do
+            curl -sf http://localhost:8080/api/ping && break || sleep 1
+          done
+
+      - name: Run smoke test
+        run: k6 run tests/performance/smoke.ts
+        env:
+          BASE_URL: http://localhost:8080/api
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: k6-results/
           retention-days: 7

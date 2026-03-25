@@ -48,9 +48,11 @@ Unlike basic automation projects, this focuses on:
 ## Tech stack
 
 - **Playwright** — E2E browser tests + API tests
+- **k6** — Performance testing (smoke, load, stress)
 - **Cucumber.js** — BDD with Gherkin (proof of concept)
 - **TypeScript** — Strong typing and maintainability
-- **GitHub Actions** — CI/CD (api + e2e jobs on every push/PR)
+- **Docker** — Self-contained Conduit API for CI (Go/Gin + SQLite, hosted on ghcr.io)
+- **GitHub Actions** — Tiered CI pipeline (API on every push, E2E + performance nightly)
 
 ---
 
@@ -64,13 +66,15 @@ This project validates both **business logic and system behavior across layers**
 - **Favorites system** — state persistence and user-specific views
 - **Follow/Unfollow system** — relationship state and user-specific perspective
 - **User profile update** — field persistence and round-trip validation
+- **Performance** — smoke baseline, response time thresholds, error rate validation
 
-| Layer     | Tests                 |
-| --------- | --------------------- |
-| **API**   | 36                    |
-| **E2E**   | 6                     |
-| **BDD**   | 3 scenarios           |
-| **Total** | 42 Playwright + 3 BDD |
+| Layer           | Tests                        |
+| --------------- | ---------------------------- |
+| **API**         | 36                           |
+| **E2E**         | 6                            |
+| **Performance** | 1 smoke (load/stress planned)|
+| **BDD**         | 3 scenarios                  |
+| **Total**       | 42 Playwright + 1 k6 + 3 BDD |
 
 ---
 
@@ -97,6 +101,8 @@ quality-labs/
 │   │       ├── SignInPage.ts         # /login form
 │   │       ├── ArticleEditorPage.ts  # /editor form
 │   │       └── ArticlePage.ts        # /article/:slug view
+│   ├── performance/                 # k6 performance tests
+│   │   └── smoke.ts                 # Smoke: 1 VU, 30s, response time thresholds
 │   └── bdd/                         # BDD with Cucumber (proof of concept)
 │       ├── features/
 │       │   └── authentication.feature
@@ -237,6 +243,29 @@ The Go/Gin backend compiles to a single binary with no runtime dependencies beyo
 
 Playwright and Chromium require Debian-based system libraries (`libnss`, `libglib`, `libatk`, etc.) that Alpine doesn't ship. The E2E and API test jobs use `ubuntu-latest` + `actions/setup-node` — the standard and officially recommended environment for Playwright.
 
+### Why is CI tiered by trigger?
+
+Not all tests are equal in cost, speed, and purpose. Running everything on every push would be slow, expensive, and noisy.
+
+| Trigger | Jobs | Reasoning |
+|---|---|---|
+| Push / PR | API only | Fast feedback in seconds — catches most bugs before merge |
+| Nightly (6am UTC) | API + E2E + Performance | Full confidence check while nobody is actively working |
+| Manual (`workflow_dispatch`) | API + E2E + Performance | On-demand for pre-release validation or debugging |
+
+This mirrors how professional teams structure CI: **fast gates on every change, deep validation on a schedule**.
+
+### Why k6 for performance testing?
+
+k6 scripts are written in TypeScript — no new language to learn. It runs as a standalone binary (not Node.js), has a clean CLI output with built-in threshold assertions, and integrates naturally into GitHub Actions via `grafana/setup-k6-action`.
+
+Performance tests target the local Docker container, never the hosted API — load-testing someone else's server is bad practice regardless of the environment.
+
+The three test types in order of usage:
+- **Smoke** — 1 VU, 30s. Confirms the API responds before running heavier tests.
+- **Load** — simulates realistic concurrent traffic. Establishes a performance baseline.
+- **Stress** — ramps users until the API degrades. Finds the breaking point.
+
 ### Why BDD is just a proof of concept?
 
 BDD adds a second abstraction layer.
@@ -266,6 +295,8 @@ For this project:
 | Page Object Model       | `e2e/pages/`            | Centralized locators, one file per page            |
 | Dockerized API for CI   | `docker/`, `ci.yml`     | Self-contained test environment, no external deps  |
 | Env-based API URL       | `tests/config.ts`       | Same tests run locally (hosted) and in CI (Docker) |
+| Tiered CI pipeline      | `ci.yml`                | API on every push, E2E + perf nightly or on demand |
+| k6 smoke baseline       | `performance/smoke.ts`  | Threshold assertions on response time + error rate |
 
 ## What I learned building this
 
@@ -274,15 +305,41 @@ For this project:
 - **E2E tests should validate critical flows, not everything**
 - **BDD looks clean in theory** but adds maintenance overhead when you're the only one reading the feature files.
 - **Flaky tests are almost always a data isolation problem**, not a timing problem.
+- **Performance testing requires owning the environment** — never load-test someone else's server.
+- **Tiered CI is a discipline, not a configuration** — fast feedback on every push, deep validation on a schedule.
+
+## Deliberate scope decisions
+
+These are things that were **intentionally not included** — with reasons.
+
+### Why no unit tests?
+
+Unit tests belong to the team that owns the source code. This project tests the **Conduit API as a consumer** — the same position a QA engineer holds in a real team. Writing unit tests for third-party code would be testing the wrong thing at the wrong layer.
+
+The API tests here are effectively **integration tests**: they make real HTTP calls against a real running server and validate behavior end-to-end. That is the correct responsibility boundary for a QA engineer who doesn't own the implementation.
+
+### Why no contract tests?
+
+Contract testing (e.g. with Pact) verifies that the API contract between a provider and consumer doesn't break silently. It's a powerful pattern — but it requires both sides of the contract to be under your control or your organization's control.
+
+Since Conduit is a third-party application, there is no provider team to publish a pact to. Contract testing is listed as a future direction below — it becomes relevant when testing internal microservices where both producer and consumer are owned by the same team.
+
+---
 
 ## Next steps
 
-- [ ] **Performance testing with k6** — run Conduit backend locally via Docker, then write smoke/load/stress tests
-- [ ] **More E2E flows** — navigation, user profile, tags filtering
-- [x] **CI/CD with GitHub Actions** — run the full suite on every push
+- [x] **Performance testing with k6** — smoke test running, load/stress tests planned
+- [x] **CI/CD with GitHub Actions** — tiered pipeline: API on every push, E2E + perf nightly
 - [x] **Follow/unfollow API tests** — user profile relationship testing
 - [x] **User profile update API tests** — PUT /api/user
+- [ ] **Load and stress tests** — realistic concurrent traffic + breaking point analysis
+- [ ] **More E2E flows** — navigation, user profile, tags filtering
+- [ ] **Observability** — export k6 metrics to Grafana for visual performance dashboards
+- [ ] **Contract testing with Pact** — relevant when testing internal microservices with owned provider/consumer
+- [ ] **Jenkins integration** — CI orchestration for enterprise environments or self-hosted runners
 - [ ] **QA Playground challenges** — bonus section for tricky UI automation (shadow DOM, iframes, drag-and-drop)
+
+---
 
 ## Final note
 
