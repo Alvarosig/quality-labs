@@ -93,6 +93,9 @@ test.describe('Article CRUD via UI', () => {
     ]);
 
     await page.waitForURL(/\/article\//);
+    await page.waitForResponse(
+      (r) => r.url().includes('/api/articles/') && r.request().method() === 'GET'
+    );
 
     await expect(articlePage.body).toContainText(
       'Updated content via E2E test'
