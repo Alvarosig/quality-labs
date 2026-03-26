@@ -1,4 +1,4 @@
-# Quality Labs
+# Quality Labs – Test Architecture & Quality Engineering Lab
 
 [![CI](https://github.com/Alvarosig/quality-labs/actions/workflows/ci.yml/badge.svg)](https://github.com/Alvarosig/quality-labs/actions/workflows/ci.yml)
 
