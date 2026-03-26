@@ -12,6 +12,9 @@
     "report": "npx playwright show-report",
     "har:record": "npx playwright test --project=e2e tests/e2e/har-example.spec.ts",
     "har:convert": "node scripts/har-converter.js",
+    "perf:smoke": "k6 run tests/performance/smoke.ts",
+    "perf:load": "k6 run tests/performance/load.ts",
+    "perf:stress": "k6 run tests/performance/stress.ts",
     "format": "prettier --write ."
   },
   "keywords": [

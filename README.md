@@ -66,15 +66,15 @@ This project validates both **business logic and system behavior across layers**
 - **Favorites system** — state persistence and user-specific views
 - **Follow/Unfollow system** — relationship state and user-specific perspective
 - **User profile update** — field persistence and round-trip validation
-- **Performance** — smoke baseline, response time thresholds, error rate validation
+- **Performance** — smoke baseline, load stability, stress ceiling with findings
 
-| Layer           | Tests                        |
-| --------------- | ---------------------------- |
-| **API**         | 36                           |
-| **E2E**         | 6                            |
-| **Performance** | 1 smoke (load/stress planned)|
-| **BDD**         | 3 scenarios                  |
-| **Total**       | 42 Playwright + 1 k6 + 3 BDD |
+| Layer           | Tests                          |
+| --------------- | ------------------------------ |
+| **API**         | 36                             |
+| **E2E**         | 6                              |
+| **Performance** | 3 (smoke, load, stress)        |
+| **BDD**         | 3 scenarios                    |
+| **Total**       | 42 Playwright + 3 k6 + 3 BDD  |
 
 ---
 
@@ -102,7 +102,9 @@ quality-labs/
 │   │       ├── ArticleEditorPage.ts  # /editor form
 │   │       └── ArticlePage.ts        # /article/:slug view
 │   ├── performance/                 # k6 performance tests
-│   │   └── smoke.ts                 # Smoke: 1 VU, 30s, response time thresholds
+│   │   ├── smoke.ts                 # Smoke: 1 VU, 30s — confirms API is alive
+│   │   ├── load.ts                  # Load: 20 VUs, 2min — stability baseline
+│   │   └── stress.ts                # Stress: ramp to 100 VUs — finds the ceiling
 │   └── bdd/                         # BDD with Cucumber (proof of concept)
 │       ├── features/
 │       │   └── authentication.feature
@@ -250,8 +252,8 @@ Not all tests are equal in cost, speed, and purpose. Running everything on every
 | Trigger | Jobs | Reasoning |
 |---|---|---|
 | Push / PR | API only | Fast feedback in seconds — catches most bugs before merge |
-| Nightly (6am UTC) | API + E2E + Performance | Full confidence check while nobody is actively working |
-| Manual (`workflow_dispatch`) | API + E2E + Performance | On-demand for pre-release validation or debugging |
+| Nightly (6am UTC) | API + E2E + Smoke + Load | Full confidence check while nobody is actively working |
+| Manual (`workflow_dispatch`) | All including Stress | Pre-release validation or on-demand investigation |
 
 This mirrors how professional teams structure CI: **fast gates on every change, deep validation on a schedule**.
 
@@ -263,8 +265,8 @@ Performance tests target the local Docker container, never the hosted API — lo
 
 The three test types in order of usage:
 - **Smoke** — 1 VU, 30s. Confirms the API responds before running heavier tests.
-- **Load** — simulates realistic concurrent traffic. Establishes a performance baseline.
-- **Stress** — ramps users until the API degrades. Finds the breaking point.
+- **Load** — 20 VUs, 2min. p(95) = 52ms, 0% errors. Establishes the performance baseline.
+- **Stress** — ramps to 100 VUs. p(95) = 1.23s, 1% errors. Revealed SQLite write contention above 50 concurrent users — expected limitation of the backend, not the test suite.
 
 ### Why BDD is just a proof of concept?
 
@@ -332,7 +334,7 @@ Since Conduit is a third-party application, there is no provider team to publish
 - [x] **CI/CD with GitHub Actions** — tiered pipeline: API on every push, E2E + perf nightly
 - [x] **Follow/unfollow API tests** — user profile relationship testing
 - [x] **User profile update API tests** — PUT /api/user
-- [ ] **Load and stress tests** — realistic concurrent traffic + breaking point analysis
+- [x] **Load and stress tests** — 20 VUs baseline + 100 VUs stress, SQLite ceiling identified
 - [ ] **More E2E flows** — navigation, user profile, tags filtering
 - [ ] **Observability** — export k6 metrics to Grafana for visual performance dashboards
 - [ ] **Contract testing with Pact** — relevant when testing internal microservices with owned provider/consumer
